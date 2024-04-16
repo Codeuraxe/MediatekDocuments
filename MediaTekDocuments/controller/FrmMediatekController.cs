@@ -7,185 +7,102 @@ using System.Threading;
 namespace MediaTekDocuments.controller
 {
     /// <summary>
-    /// Manages interactions between the FrmMediatek user interface and the data access layer.
+    /// Controller attached to the FrmMediatek form handling data access interactions.
     /// </summary>
-    public class MediaController
+    class FrmMediatekController
     {
         /// <summary>
-        /// Provides access to the database methods.
+        /// Data access object providing access to the database.
         /// </summary>
-        private readonly DataAccessLayer dataAccess;
+        private readonly Access access;
 
         /// <summary>
-        /// Initializes a new instance of the controller using a singleton of the data access class.
+        /// Initializes a new instance of the controller, ensuring a single data access instance is used.
         /// </summary>
-        public MediaController()
+        public FrmMediatekController()
         {
-            dataAccess = DataAccessLayer.GetInstance();
+            access = Access.GetInstance();
         }
 
         /// <summary>
         /// Retrieves all genre categories from the database.
         /// </summary>
         /// <returns>A list of genre categories.</returns>
-        public List<Category> RetrieveAllGenres()
+        public List<Categorie> GetAllGenres()
         {
-            return dataAccess.FetchAllGenres();
+            return access.GetAllGenres();
         }
 
         /// <summary>
-        /// Retrieves all books from the database.
+        /// Retrieves all shelf sections from the database.
         /// </summary>
-        /// <returns>A list of books.</returns>
-        public List<Book> RetrieveAllBooks()
+        /// <returns>A list of shelf sections.</returns>
+        public List<Categorie> GetAllRayons()
         {
-            return dataAccess.FetchAllBooks();
-        }
-
-        /// <summary>
-        /// Retrieves all DVDs from the database.
-        /// </summary>
-        /// <returns>A list of DVDs.</returns>
-        public List<DVD> RetrieveAllDVDs()
-        {
-            return dataAccess.FetchAllDVDs();
-        }
-
-        /// <summary>
-        /// Retrieves all magazines from the database.
-        /// </summary>
-        /// <returns>A list of magazines.</returns>
-        public List<Magazine> RetrieveAllMagazines()
-        {
-            return dataAccess.FetchAllMagazines();
-        }
-
-        /// <summary>
-        /// Retrieves all shelf categories from the database.
-        /// </summary>
-        /// <returns>A list of shelf categories.</returns>
-        public List<Category> RetrieveAllShelves()
-        {
-            return dataAccess.FetchAllShelves();
+            return access.GetAllRayons();
         }
 
         /// <summary>
         /// Retrieves all target audience categories from the database.
         /// </summary>
         /// <returns>A list of audience categories.</returns>
-        public List<Category> RetrieveAllAudiences()
+        public List<Categorie> GetAllPublics()
         {
-            return dataAccess.FetchAllAudiences();
+            return access.GetAllPublics();
         }
 
         /// <summary>
-        /// Retrieves all copies of a specific magazine identified by its ID.
+        /// Executes a specified document management operation (create, update, delete) using provided details.
         /// </summary>
-        /// <param name="magazineId">The ID of the magazine for which copies are being retrieved.</param>
-        /// <returns>A list of magazine copies.</returns>
-        public List<Copy> RetrieveCopiesByMagazine(string magazineId)
+        /// <param name="id">Document ID.</param>
+        /// <param name="titre">Title of the document.</param>
+        /// <param name="image">Document image URL or path.</param>
+        /// <param name="IdRayon">Shelf section ID.</param>
+        /// <param name="IdPublic">Target audience ID.</param>
+        /// <param name="IdGenre">Genre ID.</param>
+        /// <param name="operation">The operation to perform: 'create', 'update', or 'delete'.</param>
+        /// <returns>True if the operation was successful, false otherwise.</returns>
+        public bool DocumentAction(string id, string titre, string image, string IdRayon, string IdPublic, string IdGenre, string operation)
         {
-            return dataAccess.FetchCopiesByMagazine(magazineId);
+            var details = new Dictionary<string, string>
+            {
+                {"id", id},
+                {"titre", titre},
+                {"image", image},
+                {"idRayon", IdRayon},
+                {"idPublic", IdPublic},
+                {"idGenre", IdGenre}
+            };
+            switch (operation.ToLower())
+            {
+                case "create":
+                    return access.CreateEntity("document", JsonConvert.SerializeObject(details));
+                case "update":
+                    return access.UpdateEntity("document", id, JsonConvert.SerializeObject(details));
+                case "delete":
+                    return access.DeleteEntity("document", JsonConvert.SerializeObject(details));
+            }
+            return false;
         }
 
         /// <summary>
-        /// Adds a new copy of a magazine to the database.
+        /// Retrieves the exemplars for a specific magazine issue.
         /// </summary>
-        /// <param name="copy">The magazine copy to add.</param>
-        /// <returns>Whether the operation was successful.</returns>
-        public bool AddMagazineCopy(Copy copy)
+        /// <param name="idDocument">Magazine issue ID.</param>
+        /// <returns>A list of exemplars for the specified issue.</returns>
+        public List<Exemplaire> GetExemplairesRevue(string idDocument)
         {
-            return dataAccess.AddCopy(copy);
+            return access.GetExemplairesRevue(idDocument);
         }
 
         /// <summary>
-        /// Adds a new book to the database with specified details.
+        /// Creates a new exemplar of a magazine in the database.
         /// </summary>
-        /// <param name="book">The book to create, including details.</param>
-        /// <returns>True if the book was successfully created, false otherwise.</returns>
-        public bool AddBook(Book book)
+        /// <param name="exemplaire">Exemplar to be added.</param>
+        /// <returns>True if the creation was successful, otherwise false.</returns>
+        public bool CreerExemplaire(Exemplaire exemplaire)
         {
-            return dataAccess.AddNewBook(book);
-        }
-
-        /// <summary>
-        /// Updates details of an existing book in the database.
-        /// </summary>
-        /// <param name="book">The book with updated details to modify in the database.</param>
-        /// <returns>True if the update was successful, false otherwise.</returns>
-        public bool ModifyBook(Book book)
-        {
-            return dataAccess.ModifyExistingBook(book);
-        }
-
-        /// <summary>
-        /// Removes a book from the database using its ID.
-        /// </summary>
-        /// <param name="book">The book to remove.</param>
-        /// <returns>True if the book was successfully removed, false otherwise.</returns>
-        public bool RemoveBook(Book book)
-        {
-            return dataAccess.RemoveBook(book);
-        }
-
-        /// <summary>
-        /// Adds a new DVD to the database, detailing its attributes.
-        /// </summary>
-        /// <param name="dvd">The DVD to add.</param>
-        /// <returns>True if the DVD was successfully created, false otherwise.</returns>
-        public bool AddDVD(DVD dvd)
-        {
-            return dataAccess.AddNewDVD(dvd);
-        }
-
-        /// <summary>
-        /// Updates details of an existing DVD in the database.
-        /// </summary>
-        /// <param name="dvd">The DVD with updated details to modify in the database.</param>
-        /// <returns>True if the update was successful, false otherwise.</returns>
-        public bool ModifyDVD(DVD dvd)
-        {
-            return dataAccess.ModifyExistingDVD(dvd);
-        }
-
-        /// <summary>
-        /// Removes a DVD from the database using its ID.
-        /// </summary>
-        /// <param name="dvd">The DVD to remove.</param>
-        /// <returns>True if the DVD was successfully removed, false otherwise.</returns>
-        public bool RemoveDVD(DVD dvd)
-        {
-            return dataAccess.RemoveDVD(dvd);
-        }
-
-        /// <summary>
-        /// Adds a new magazine to the database, detailing its attributes.
-        /// </summary>
-        /// <param name="magazine">The magazine to add.</param>
-        /// <returns>True if the magazine was successfully created, false otherwise.</returns>
-        public bool AddMagazine(Magazine magazine)
-        {
-            return dataAccess.AddNewMagazine(magazine);
-        }
-
-        /// <summary>
-        /// Updates details of an existing magazine in the database.
-        /// </summary>
-        /// <param name="magazine">The magazine with updated details to modify in the database.</param>
-        /// <returns>True if the update was successful, false otherwise.</returns>
-        public bool ModifyMagazine(Magazine magazine)
-        {
-            return dataAccess.ModifyExistingMagazine(magazine);
-        }
-
-        /// <summary>
-        /// Removes a magazine from the database using its ID.
-        /// </summary>
-        /// <param name="magazine">The magazine to remove.</param>
-        /// <returns>True if the magazine was successfully removed, false otherwise.</returns>
-        public bool RemoveMagazine(Magazine magazine)
-        {
-            return dataAccess.RemoveMagazine(magazine);
+            return access.CreerExemplaire(exemplaire);
         }
     }
 }
