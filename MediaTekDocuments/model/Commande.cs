@@ -7,9 +7,9 @@ namespace MediaTekDocuments.model
     {
         public string Id { get; }
         public DateTime DateCommande { get; }
-        public float Montant { get; }
+        public double Montant { get; }
 
-        public Commande(string id, DateTime dateCommande, float montant)
+        public Commande(string id, DateTime dateCommande, double montant)
         {
             Id = id;
             DateCommande = dateCommande;

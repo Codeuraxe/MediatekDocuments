@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MediaTekDocuments.model;
-using MediaTekDocuments.manager;
+using MediaTekDocuments.dal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -10,191 +10,210 @@ using System.Configuration;
 namespace MediaTekDocuments.dal
 {
     /// <summary>
-    /// Classe de gestion de l'accès aux données persistantes via une API REST.
+    /// Gestionnaire d'accès aux données.
     /// </summary>
-    public class Access
+    public class DataAccess
     {
         /// <summary>
-        /// URL de base de l'API REST utilisée pour la communication.
+        /// URL de base de l'API REST.
         /// </summary>
-        private static readonly string uriApi = "http://localhost/rest_mediatekdocuments/";
+        private static readonly string baseUri = "http://localhost/rest_mediatekdocuments/";
 
         /// <summary>
-        /// Instance unique de cette classe, implémentant le pattern Singleton.
+        /// Instance unique de DataAccess pour le pattern Singleton.
         /// </summary>
-        private static Access instance = null;
+        private static DataAccess uniqueInstance = null;
 
         /// <summary>
-        /// Gestionnaire de requêtes API pour interagir avec le backend.
+        /// Client REST pour les interactions API.
         /// </summary>
-        private readonly ApiRest api = null;
+        private readonly RestClient restClient = null;
 
         /// <summary>
-        /// Constante pour les requêtes HTTP de type GET.
+        /// Verbe HTTP utilisé pour les requêtes de lecture.
         /// </summary>
-        private const string GET = "GET";
+        private const string HTTP_GET = "GET";
 
         /// <summary>
-        /// Constante pour les requêtes HTTP de type POST.
+        /// Verbe HTTP utilisé pour les requêtes de création.
         /// </summary>
-        private const string POST = "POST";
+        private const string HTTP_POST = "POST";
 
         /// <summary>
-        /// Constante pour les requêtes HTTP de type PUT.
+        /// Verbe HTTP utilisé pour les requêtes de mise à jour.
         /// </summary>
-        private const string PUT = "PUT";
+        private const string HTTP_PUT = "PUT";
 
         /// <summary>
-        /// Constante pour les requêtes HTTP de type DELETE.
+        /// Verbe HTTP utilisé pour les requêtes de suppression.
         /// </summary>
-        private const string DELETE = "DELETE";
+        private const string HTTP_DELETE = "DELETE";
 
         /// <summary>
-        /// Constructeur privé qui initialise la connexion à l'API REST.
+        /// Constructeur privé qui initialise le client REST.
         /// </summary>
-        private Access()
+        private DataAccess()
         {
+            string authString;
             try
             {
-                string authenticationString = "admin:adminpwd";
-                api = ApiRest.GetInstance(uriApi, authenticationString);
+                authString = "admin:adminpwd";
+                restClient = RestClient.GetInstance(baseUri, authString);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.Message);
-                Environment.Exit(0);
+                Console.WriteLine(ex.Message);
+                Environment.Exit(1);
             }
         }
 
         /// <summary>
-        /// Obtient l'instance unique de la classe Access.
+        /// Fournit l'instance singleton de DataAccess.
         /// </summary>
-        /// <returns>Instance unique de Access.</returns>
-        public static Access GetInstance()
+        public static DataAccess GetInstance()
         {
-            if (instance == null)
+            if (uniqueInstance == null)
             {
-                instance = new Access();
+                uniqueInstance = new DataAccess();
             }
-            return instance;
+            return uniqueInstance;
         }
 
         /// <summary>
-        /// Récupère tous les genres disponibles dans la base de données.
+        /// Extrait et retourne tous les genres de la base de données.
         /// </summary>
-        /// <returns>Une liste de catégories de genres.</returns>
         public List<Categorie> GetAllGenres()
         {
-            var genres = TraitementRecup<Genre>(GET, "genre");
+            var genres = FetchResources<Genre>(HTTP_GET, "genre");
             return new List<Categorie>(genres);
         }
 
         /// <summary>
-        /// Récupère tous les rayons disponibles dans la base de données.
+        /// Extrait et retourne tous les rayons de la base de données.
         /// </summary>
-        /// <returns>Une liste de catégories de rayons.</returns>
         public List<Categorie> GetAllRayons()
         {
-            var rayons = TraitementRecup<Rayon>(GET, "rayon");
+            var rayons = FetchResources<Rayon>(HTTP_GET, "rayon");
             return new List<Categorie>(rayons);
         }
 
         /// <summary>
-        /// Récupère toutes les catégories de publics cibles disponibles dans la base de données.
+        /// Extrait et retourne tous les publics de la base de données.
         /// </summary>
-        /// <returns>Une liste de catégories de publics.</returns>
         public List<Categorie> GetAllPublics()
         {
-            var publics = TraitementRecup<Public>(GET, "public");
+            var publics = FetchResources<Public>(HTTP_GET, "public");
             return new List<Categorie>(publics);
         }
 
         /// <summary>
-        /// Récupère tous les livres disponibles dans la base de données.
+        /// Extrait et retourne tous les livres de la base de données.
         /// </summary>
-        /// <returns>Une liste de livres.</returns>
         public List<Livre> GetAllLivres()
         {
-            return TraitementRecup<Livre>(GET, "livre");
+            return FetchResources<Livre>(HTTP_GET, "livre");
         }
 
         /// <summary>
-        /// Crée une nouvelle entité dans la base de données en fonction du type spécifié.
+        /// Extrait et retourne tous les DVD de la base de données.
         /// </summary>
-        /// <param name="type">Type de l'entité à créer.</param>
-        /// <param name="jsonEntite">Représentation JSON de l'entité à créer.</param>
-        /// <returns>Vrai si l'opération est réussie, faux autrement.</returns>
-        public bool CreerEntite(string type, string jsonEntite)
+        public List<Dvd> GetAllDvd()
         {
-            jsonEntite = jsonEntite.Replace(' ', '-');
-            try
-            {
-                var result = TraitementRecup<Object>(POST, $"{type}/{jsonEntite}");
-                return result != null;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
+            return FetchResources<Dvd>(HTTP_GET, "dvd");
         }
 
         /// <summary>
-        /// Modifie une entité existante dans la base de données en fonction du type spécifié.
-        /// </summary>
-        /// <param name="type">Type de l'entité à modifier.</param>
-        /// <param name="id">Identifiant de l'entité à modifier.</param>
-        /// <param name="jsonEntite">Représentation JSON des nouvelles valeurs de l'entité.</param>
-        /// <returns>Vrai si l'opération est réussie, faux autrement.</returns>
-        public bool UpdateEntite(string type, string id, string jsonEntite)
-        {
-            jsonEntite = jsonEntite.Replace(' ', '-');
-            try
-            {
-                var result = TraitementRecup<Object>(PUT, $"{type}/{id}/{jsonEntite}");
-                return result != null;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
+        /// Extrait
+
+        string param = ConvertToJson("idLivreDvd", idLivre);
+            return FetchResources<CommandeDocument>(HTTP_GET, "commandedocument/" + param);
         }
 
-        /// <summary>
-        /// Supprime une entité existante dans la base de données en fonction du type spécifié.
-        /// </summary>
-        /// <param name="type">Type de l'entité à supprimer.</param>
-        /// <param name="jsonEntite">Représentation JSON de l'entité à supprimer.</param>
-        /// <returns>Vrai si l'opération est réussie, faux autrement.</returns>
-        public bool SupprimerEntite(string type, string jsonEntite)
+    /// <summary>
+    /// Crée une entité dans la base de données et retourne true si l'opération réussit.
+    /// </summary>
+    public bool CreateEntity(string type, string jsonEntity)
+    {
+        try
         {
-            jsonEntite = jsonEntite.Replace(' ', '-');
-            try
-            {
-                var result = TraitementRecup<Object>(DELETE, $"{type}/{jsonEntite}");
-                return result != null;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
+            var result = FetchResources<object>(HTTP_POST, $"{type}/{jsonEntity}");
+            return result != null;
         }
-
-        /// <summary>
-        /// Convertit un couple clé/valeur en une chaîne JSON.
-        /// </summary>
-        /// <param name="nom">Nom de la clé.</param>
-        /// <param name="valeur">Valeur associée à la clé.</param>
-        /// <returns>Représentation JSON du couple clé/valeur.</returns>
-        private string convertToJson(object nom, object valeur)
+        catch (Exception ex)
         {
-            var dictionary = new Dictionary<object, object>
-            {
-                { nom, valeur }
-            };
-            return JsonConvert.SerializeObject(dictionary);
+            Console.WriteLine("CreateEntity Error: " + ex.Message);
+            return false;
         }
     }
+
+    /// <summary>
+    /// Met à jour une entité dans la base de données et retourne true si l'opération réussit.
+    /// </summary>
+    public bool UpdateEntity(string type, string id, string jsonEntity)
+    {
+        try
+        {
+            var result = FetchResources<object>(HTTP_PUT, $"{type}/{id}/{jsonEntity}");
+            return result != null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("UpdateEntity Error: " + ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Supprime une entité dans la base de données et retourne true si l'opération réussit.
+    /// </summary>
+    public bool DeleteEntity(string type, string jsonEntity)
+    {
+        try
+        {
+            var result = FetchResources<object>(HTTP_DELETE, $"{type}/{jsonEntity.Replace(' ', '-')}");
+            return result != null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("DeleteEntity Error: " + ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Convertit un nom et une valeur en un string JSON.
+    /// </summary>
+    private string ConvertToJson(string name, object value)
+    {
+        return JsonConvert.SerializeObject(new Dictionary<string, object> { { name, value } });
+    }
+
+    /// <summary>
+    /// Générique pour effectuer des requêtes HTTP et récupérer des ressources de type spécifié.
+    /// </summary>
+    private List<T> FetchResources<T>(string method, string endpoint)
+    {
+        try
+        {
+            JObject response = restClient.RetrieveData(method, endpoint);
+            string code = response["code"].ToString();
+            if (code == "200" && method == HTTP_GET)
+            {
+                string resultString = JsonConvert.SerializeObject(response["result"]);
+                return JsonConvert.DeserializeObject<List<T>>(resultString);
+            }
+            else
+            {
+                Console.WriteLine("Error: " + response["message"]);
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("API Access Error: " + ex.Message);
+            Environment.Exit(1);
+            return null;
+        }
+    }
+}
 }
