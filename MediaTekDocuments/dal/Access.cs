@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MediaTekDocuments.model;
-using MediaTekDocuments.dal;
+using MediaTekDocuments.manager;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -10,210 +10,147 @@ using System.Configuration;
 namespace MediaTekDocuments.dal
 {
     /// <summary>
-    /// Gestionnaire d'accès aux données.
+    /// Fournit l'accès aux données stockées dans la base de données par le biais de l'API REST.
     /// </summary>
     public class DataAccess
     {
-        /// <summary>
-        /// URL de base de l'API REST.
-        /// </summary>
-        private static readonly string baseUri = "http://localhost/rest_mediatekdocuments/";
+        private static readonly string apiBaseUrl = "http://localhost/rest_mediatekdocuments/";
+        private static DataAccess _instance = null;
+        private readonly ApiRest apiClient = null;
 
-        /// <summary>
-        /// Instance unique de DataAccess pour le pattern Singleton.
-        /// </summary>
-        private static DataAccess uniqueInstance = null;
+        private const string METHOD_GET = "GET";
+        private const string METHOD_POST = "POST";
+        private const string METHOD_PUT = "PUT";
+        private const string METHOD_DELETE = "DELETE";
 
-        /// <summary>
-        /// Client REST pour les interactions API.
-        /// </summary>
-        private readonly RestClient restClient = null;
-
-        /// <summary>
-        /// Verbe HTTP utilisé pour les requêtes de lecture.
-        /// </summary>
-        private const string HTTP_GET = "GET";
-
-        /// <summary>
-        /// Verbe HTTP utilisé pour les requêtes de création.
-        /// </summary>
-        private const string HTTP_POST = "POST";
-
-        /// <summary>
-        /// Verbe HTTP utilisé pour les requêtes de mise à jour.
-        /// </summary>
-        private const string HTTP_PUT = "PUT";
-
-        /// <summary>
-        /// Verbe HTTP utilisé pour les requêtes de suppression.
-        /// </summary>
-        private const string HTTP_DELETE = "DELETE";
-
-        /// <summary>
-        /// Constructeur privé qui initialise le client REST.
-        /// </summary>
         private DataAccess()
         {
-            string authString;
+            string credentials = "admin:adminpwd";
             try
             {
-                authString = "admin:adminpwd";
-                restClient = RestClient.GetInstance(baseUri, authString);
+                apiClient = ApiRest.GetInstance(apiBaseUrl, credentials);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("Error initializing API client: " + ex.Message);
                 Environment.Exit(1);
             }
         }
 
-        /// <summary>
-        /// Fournit l'instance singleton de DataAccess.
-        /// </summary>
-        public static DataAccess GetInstance()
+        public static DataAccess Instance()
         {
-            if (uniqueInstance == null)
+            if (_instance == null)
             {
-                uniqueInstance = new DataAccess();
+                _instance = new DataAccess();
             }
-            return uniqueInstance;
+            return _instance;
         }
 
-        /// <summary>
-        /// Extrait et retourne tous les genres de la base de données.
-        /// </summary>
-        public List<Categorie> GetAllGenres()
+        public List<Categorie> RetrieveAllGenres()
         {
-            var genres = FetchResources<Genre>(HTTP_GET, "genre");
+            var genres = FetchFromDatabase<Genre>(METHOD_GET, "genre");
             return new List<Categorie>(genres);
         }
 
-        /// <summary>
-        /// Extrait et retourne tous les rayons de la base de données.
-        /// </summary>
-        public List<Categorie> GetAllRayons()
+        public List<Categorie> RetrieveAllRayons()
         {
-            var rayons = FetchResources<Rayon>(HTTP_GET, "rayon");
+            var rayons = FetchFromDatabase<Rayon>(METHOD_GET, "rayon");
             return new List<Categorie>(rayons);
         }
 
-        /// <summary>
-        /// Extrait et retourne tous les publics de la base de données.
-        /// </summary>
-        public List<Categorie> GetAllPublics()
+        public List<Suivi> RetrieveAllSuivis()
         {
-            var publics = FetchResources<Public>(HTTP_GET, "public");
+            var suivis = FetchFromDatabase<Suivi>(METHOD_GET, "suivi");
+            return new List<Suivi>(suivis);
+        }
+
+        public List<Categorie> RetrieveAllPublics()
+        {
+            var publics = FetchFromDatabase<Public>(METHOD_GET, "public");
             return new List<Categorie>(publics);
         }
 
-        /// <summary>
-        /// Extrait et retourne tous les livres de la base de données.
-        /// </summary>
-        public List<Livre> GetAllLivres()
+        public List<Livre> RetrieveAllLivres()
         {
-            return FetchResources<Livre>(HTTP_GET, "livre");
+            return FetchFromDatabase<Livre>(METHOD_GET, "livre");
         }
 
-        /// <summary>
-        /// Extrait et retourne tous les DVD de la base de données.
-        /// </summary>
-        public List<Dvd> GetAllDvd()
+        public bool CreateEntity(string entityType, string jsonData)
         {
-            return FetchResources<Dvd>(HTTP_GET, "dvd");
+            return ProcessRequest(entityType, jsonData, METHOD_POST);
         }
 
-        /// <summary>
-        /// Extrait
-
-        string param = ConvertToJson("idLivreDvd", idLivre);
-            return FetchResources<CommandeDocument>(HTTP_GET, "commandedocument/" + param);
+        public bool UpdateEntity(string entityType, string id, string jsonData)
+        {
+            return ProcessRequest($"{entityType}/{id}", jsonData, METHOD_PUT);
         }
 
-    /// <summary>
-    /// Crée une entité dans la base de données et retourne true si l'opération réussit.
-    /// </summary>
-    public bool CreateEntity(string type, string jsonEntity)
-    {
-        try
+        public bool DeleteEntity(string entityType, string jsonData)
         {
-            var result = FetchResources<object>(HTTP_POST, $"{type}/{jsonEntity}");
-            return result != null;
+            return ProcessRequest(entityType, jsonData, METHOD_DELETE);
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("CreateEntity Error: " + ex.Message);
-            return false;
-        }
-    }
 
-    /// <summary>
-    /// Met à jour une entité dans la base de données et retourne true si l'opération réussit.
-    /// </summary>
-    public bool UpdateEntity(string type, string id, string jsonEntity)
-    {
-        try
+        public List<Dvd> RetrieveAllDvd()
         {
-            var result = FetchResources<object>(HTTP_PUT, $"{type}/{id}/{jsonEntity}");
-            return result != null;
+            return FetchFromDatabase<Dvd>(METHOD_GET, "dvd");
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("UpdateEntity Error: " + ex.Message);
-            return false;
-        }
-    }
 
-    /// <summary>
-    /// Supprime une entité dans la base de données et retourne true si l'opération réussit.
-    /// </summary>
-    public bool DeleteEntity(string type, string jsonEntity)
-    {
-        try
+        public List<Revue> RetrieveAllRevues()
         {
-            var result = FetchResources<object>(HTTP_DELETE, $"{type}/{jsonEntity.Replace(' ', '-')}");
-            return result != null;
+            return FetchFromDatabase<Revue>(METHOD_GET, "revue");
         }
-        catch (Exception ex)
+
+        public List<Exemplaire> RetrieveExemplairesByRevue(string revueId)
         {
-            Console.WriteLine("DeleteEntity Error: " + ex.Message);
-            return false;
+            return FetchFromDatabase<Exemplaire>(METHOD_GET, $"exemplaire/{ConvertToJson("id", revueId)}");
         }
-    }
 
-    /// <summary>
-    /// Convertit un nom et une valeur en un string JSON.
-    /// </summary>
-    private string ConvertToJson(string name, object value)
-    {
-        return JsonConvert.SerializeObject(new Dictionary<string, object> { { name, value } });
-    }
-
-    /// <summary>
-    /// Générique pour effectuer des requêtes HTTP et récupérer des ressources de type spécifié.
-    /// </summary>
-    private List<T> FetchResources<T>(string method, string endpoint)
-    {
-        try
+        private List<T> FetchFromDatabase<T>(string method, string query)
         {
-            JObject response = restClient.RetrieveData(method, endpoint);
-            string code = response["code"].ToString();
-            if (code == "200" && method == HTTP_GET)
+            var response = apiClient.MakeRequest(method, query);
+            if (response["code"].ToString() == "200" && method == METHOD_GET)
             {
-                string resultString = JsonConvert.SerializeObject(response["result"]);
-                return JsonConvert.DeserializeObject<List<T>>(resultString);
+                var result = JsonConvert.SerializeObject(response["result"]);
+                return JsonConvert.DeserializeObject<List<T>>(result, new JsonSerializerSettings { Converters = new List<JsonConverter> { new CustomBooleanJsonConverter() } });
             }
             else
             {
-                Console.WriteLine("Error: " + response["message"]);
-                return null;
+                Console.WriteLine($"Error fetching data: {response["message"]}");
+                return new List<T>();
             }
         }
-        catch (Exception ex)
+
+        private bool ProcessRequest(string path, string data, string method)
         {
-            Console.WriteLine("API Access Error: " + ex.Message);
-            Environment.Exit(1);
-            return null;
+            var response = apiClient.MakeRequest(method, $"{path}/{data.Replace(' ', '-')}");
+            return response != null && response["code"].ToString() == "200";
+        }
+
+        private string ConvertToJson(string key, object value)
+        {
+            var dictionary = new Dictionary<string, object> { { key, value } };
+            return JsonConvert.SerializeObject(dictionary);
+        }
+
+        private class CustomBooleanJsonConverter : JsonConverter<bool>
+        {
+            public override bool ReadJson(JsonReader reader, Type objectType, bool existingValue, bool hasExistingValue, JsonSerializer serializer)
+            {
+                return Convert.ToBoolean(reader.ValueType == typeof(string) ? Convert.ToByte(reader.Value) : reader.Value);
+            }
+
+            public override void WriteJson(JsonWriter writer, bool value, JsonSerializer serializer)
+            {
+                serializer.Serialize(writer, value);
+            }
+        }
+
+        private class CustomDateTimeConverter : IsoDateTimeConverter
+        {
+            public CustomDateTimeConverter()
+            {
+                DateTimeFormat = "yyyy-MM-dd";
+            }
         }
     }
-}
 }

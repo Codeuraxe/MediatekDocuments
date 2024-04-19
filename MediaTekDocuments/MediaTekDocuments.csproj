@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+﻿﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
 	<PropertyGroup>
@@ -119,6 +119,7 @@
 		<Compile Include="manager\ApiRest.cs" />
 		<Compile Include="controller\FrmMediatekController.cs" />
 		<Compile Include="dal\Access.cs" />
+		<Compile Include="model\Abonnement.cs" />
 		<Compile Include="model\Commande.cs" />
 		<Compile Include="model\CommandeDocument.cs" />
 		<Compile Include="model\Suivi.cs" />
