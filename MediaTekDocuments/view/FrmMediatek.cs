@@ -36,7 +36,7 @@ namespace MediaTekDocuments.view
             this.controller = new FrmMediatekController();
             afficherAlerteAbo();
         }
-
+            
         /// <summary>
         /// Rempli un des 3 combo (genre, public, rayon)
         /// </summary>
@@ -125,20 +125,20 @@ namespace MediaTekDocuments.view
 
             }
 
-            if (interupteur)
+            if(interupteur)
                 MessageBox.Show(alerteRevues);
         }
         #endregion
 
         #region Onglet Livres
         private readonly BindingSource bdgLivresListe = new BindingSource();
-        private List<Livre> lesLivres = new List<Livre>();
+        private List<Livre> lesLivres = new List<Livre>();  
         private readonly BindingSource bdgGenresInfo = new BindingSource();
         private readonly BindingSource bdgPublicsInfo = new BindingSource();
         private readonly BindingSource bdgRayonsInfo = new BindingSource();
         private readonly BindingSource bdgLivresListeEx = new BindingSource();
         private List<Exemplaire> lesExemplairesLivres = new List<Exemplaire>();
-
+        
 
         /// <summary>
         /// Ouverture de l'onglet Livres : 
@@ -187,7 +187,7 @@ namespace MediaTekDocuments.view
         /// <param name="exemplaires"></param>
         private void RemplirLivresListeExemplaire(List<Exemplaire> exemplaires)
         {
-            if (exemplaires.Count > 0)
+            if( exemplaires.Count > 0)
             {
                 bdgLivresListeEx.DataSource = exemplaires;
                 dgvLivresListeEx.DataSource = bdgLivresListeEx;
@@ -199,7 +199,7 @@ namespace MediaTekDocuments.view
                 dgvLivresListeEx.Columns["dateAchat"].DefaultCellStyle.Format = "d/M/yyyy";
                 dgvLivresListeEx.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 //change les idEtats en la valeur de leur libelle 
-                for (int i = 0; i < dgvLivresListeEx.RowCount; i++)
+                for (int i = 0 ; i < dgvLivresListeEx.RowCount; i++)
                 {
                     if (int.TryParse(dgvLivresListeEx.Rows[i].Cells["idEtat"].Value.ToString(), out _))
                         dgvLivresListeEx.Rows[i].Cells["idEtat"].Value = lesEtatsEx.First(o => o.Id == dgvLivresListeEx.Rows[i].Cells["idEtat"].Value.ToString());
@@ -675,7 +675,7 @@ namespace MediaTekDocuments.view
         /// <param name="e"></param>
         private void btnSupprimerLivresEx_Click(object sender, EventArgs e)
         {
-            if (modifEtat)
+            if(modifEtat)
             {
                 modifEtat = false;
                 btnSupprimerLivresEx.Text = "Supprimer";
@@ -687,7 +687,7 @@ namespace MediaTekDocuments.view
             }
             else // si on est pas en modif 
             {
-                if (dgvLivresListeEx.CurrentCell != null)
+                if(dgvLivresListeEx.CurrentCell != null)
                 {
                     if (MessageBox.Show("Etes vous de supprimer l'exemplaire " + txbLivresNbEx.Text + " ? ", "oui ?", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
@@ -704,7 +704,7 @@ namespace MediaTekDocuments.view
                             Thread.Sleep(20);
                         }
                     }
-
+                    
                 }
                 else
                 {
@@ -781,7 +781,7 @@ namespace MediaTekDocuments.view
                 else
                 {
                     MessageBox.Show("Aucun exemplaire selectionné");
-                }
+                }    
             }
         }
 
@@ -3245,7 +3245,7 @@ namespace MediaTekDocuments.view
 
 
         #endregion
-
+ 
         #region Onglet Commandes de Dvd
 
         private readonly BindingSource bdgDvdComListe = new BindingSource();
@@ -3545,7 +3545,7 @@ namespace MediaTekDocuments.view
             btnDvdComAnnulGenres.Enabled = !modif;
             btnlivresComAnnulPublics.Enabled = !modif;
             ajouterBool = false;
-
+                
         }
 
         /// <summary>
@@ -4061,7 +4061,7 @@ namespace MediaTekDocuments.view
             string idRevue = revue.Id;
             VideAboInfos();
             lesAbonnements = controller.GetAbonnements(idRevue);
-            grpAboCommandes.Text = revue.Titre;
+            grpAboCommandes.Text = revue.Titre ;
             if (lesAbonnements.Count == 0)
                 VideAboInfos();
             RemplirAboListeCommandes(lesAbonnements);
@@ -4293,7 +4293,7 @@ namespace MediaTekDocuments.view
                 filtre = true;
             }
             RemplirAboListeComplete();
-        }
+        }  
 
         /// <summary>
         /// Filtre les abonnement dont la fin est
@@ -4363,7 +4363,7 @@ namespace MediaTekDocuments.view
                         checkValid = controller.UpdateAbonnement(abonnement);
                     else
                         checkValid = controller.CreerAbonnement(abonnement);
-                    if (checkValid)
+                    if( checkValid)
                     {
                         enCoursModifAbo(false);
                         Thread.Sleep(100);
@@ -4508,3 +4508,7 @@ namespace MediaTekDocuments.view
         #endregion
     }
 }
+
+
+
+

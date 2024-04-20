@@ -1,31 +1,27 @@
-﻿namespace MediaTekDocuments.model
+﻿
+namespace MediaTekDocuments.model
 {
     /// <summary>
-    /// Classe représentant la condition physique d'un article dans l'inventaire.
+    /// Classe métier Etat (état d'usure d'un document)
     /// </summary>
-    public class Condition
+    public class Etat
     {
-        public string Code { get; }
-        public string Description { get; }
+        public string Id { get; }
+        public string Libelle { get; }
 
-        /// <summary>
-        /// Initialise une nouvelle instance de la classe Condition avec un code et une description spécifiés.
-        /// </summary>
-        /// <param name="code">Identifiant unique de la condition.</param>
-        /// <param name="description">Description textuelle de la condition.</param>
-        public Condition(string code, string description)
+        public Etat(string id, string libelle)
         {
-            this.Code = code;
-            this.Description = description;
+            this.Id = id;
+            this.Libelle = libelle;
         }
 
         /// <summary>
-        /// Fournit la description de la condition pour l'affichage, par exemple dans des listes déroulantes.
+        /// Récupération du libellé pour l'affichage dans les combos
         /// </summary>
-        /// <returns>Retourne la description de la condition.</returns>
+        /// <returns>Libelle</returns>
         public override string ToString()
         {
-            return this.Description;
+            return this.Libelle;
         }
     }
 }
