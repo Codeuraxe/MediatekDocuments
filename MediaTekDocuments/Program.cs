@@ -12,9 +12,10 @@ namespace MediaTekDocuments
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FrmMediatek());
+            Application.EnableVisualStyles();  // Active les styles visuels pour l'application.
+            Application.SetCompatibleTextRenderingDefault(false);  // Configure le rendu de texte compatible.
+            Application.Run(new FrmLogin());  // Lance le formulaire de connexion comme fenêtre principale.
         }
     }
 }
+
