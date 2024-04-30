@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System.Configuration;
+using Serilog;
 
 namespace MediaTekDocuments.dal
 {
@@ -55,12 +56,18 @@ namespace MediaTekDocuments.dal
         {
             try
             {
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Verbose()
+                    .WriteTo.Console()
+                    .WriteTo.File("logs/log.txt")
+                    .CreateLogger();
                 String authenticationString = GetAuthentificationString(authenticationName);
                 String uriApi = GetAuthentificationString(uriApiName);
                 api = ApiRest.GetInstance(uriApi, authenticationString);
             }
             catch (Exception e)
             {
+                Log.Fatal("Access catch erreur={0}", e.Message);
                 Console.WriteLine(e.Message);
                 Environment.Exit(0);
             }
@@ -111,6 +118,7 @@ namespace MediaTekDocuments.dal
             List<Utilisateur> utilisateurs = TraitementRecup<Utilisateur>(GET, "utilisateur/" + mailHash);
             if (utilisateurs.Count > 0)
                 return utilisateurs[0];
+            Log.Error("Access.GetLogin catch user fail connection :" + mail);
             return null;
         }
 
@@ -189,6 +197,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
+                Log.Error("Access.CreerEntite catch type erreur={0}, table={1}, champs={2}", ex, type, jsonEntite);
                 Console.WriteLine(ex.Message);
             }
             return false;
@@ -210,6 +219,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
+                Log.Error("Access.UpdateEntite catch type erreur={0}, table={1}, champs={2}", ex, type, jsonEntite);
                 Console.WriteLine(ex.Message);
             }
             return false;
@@ -230,6 +240,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
+                Log.Error("Access.SupprimerEntite catch type erreur={0}, table={1}, champs={2}", ex, type, jsonEntite);
                 Console.WriteLine(ex.Message);
             }
             return false;
@@ -321,6 +332,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
+                Log.Error("Access.CreerExemplaire catch type erreur={0} champs={1}", ex, jsonExemplaire);
                 Console.WriteLine(ex.Message);
             }
             return false;
@@ -355,11 +367,13 @@ namespace MediaTekDocuments.dal
                 else
                 {
                     Console.WriteLine("code erreur = " + code + " message = " + (String)retour["message"]);
+                    Log.Error("Access.TraitementRecup code erreur = " + code + " message = " + (String)retour["message"]);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+                Log.Fatal("Erreur lors de l'accès à l'API : " + e.Message);
                 Environment.Exit(0);
             }
             return liste;
