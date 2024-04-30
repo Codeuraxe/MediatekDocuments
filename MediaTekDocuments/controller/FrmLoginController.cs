@@ -18,10 +18,8 @@ namespace MediaTekDocuments.controller
 
         private Utilisateur utilisateur = null;
 
-        private FrmMediatek mediatek;
-
         /// <summary>
-        /// Initialise une nouvelle instance et configure l'objet d'accès aux données.
+        /// Obtient l'instance unique d'accès aux données.
         /// </summary>
         public FrmLoginController()
         {
@@ -29,20 +27,20 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
-        /// Initialise l'interface principale de l'application et l'affiche.
+        /// Active la vue principale.
         /// </summary>
-        private void init()
+        private void Init()
         {
-            mediatek = new FrmMediatek(utilisateur);
+            FrmMediatek mediatek = new FrmMediatek(utilisateur);
             mediatek.Show();
         }
 
         /// <summary>
-        /// Tente de connecter l'utilisateur avec l'email et le mot de passe fournis.
+        /// Vérifie l'existence de l'utilisateur dans la base de données.
         /// </summary>
-        /// <param name="mail">Email de l'utilisateur.</param>
+        /// <param name="mail">Adresse mail de l'utilisateur.</param>
         /// <param name="password">Mot de passe de l'utilisateur.</param>
-        /// <returns>Vrai si la connexion est réussie, sinon faux.</returns>
+        /// <returns>Vrai si l'utilisateur existe et est authentifié.</returns>
         public bool GetLogin(string mail, string password)
         {
             password = "Mediatek" + password;
@@ -54,7 +52,7 @@ namespace MediaTekDocuments.controller
             utilisateur = access.GetLogin(mail, hash);
             if (utilisateur != null)
             {
-                init();
+                Init();
                 return true;
             }
 
@@ -62,17 +60,17 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
-        /// Génère un hash pour la chaîne donnée en utilisant l'algorithme de hash spécifié.
+        /// Convertit un mot de passe en une chaîne de hash.
         /// </summary>
-        /// <param name="hashAlgorithm">Algorithme de hash à utiliser.</param>
-        /// <param name="input">Chaîne à hasher.</param>
-        /// <returns>Chaîne hexadécimale du hash.</returns>
+        /// <param name="hashAlgorithm">Algorithme de hash utilisé.</param>
+        /// <param name="input">Mot de passe à hasher.</param>
+        /// <returns>Chaîne de caractères représentant le hash.</returns>
         private static string GetHash(HashAlgorithm hashAlgorithm, string input)
         {
-            // Convertit la chaîne en entrée en tableau de bytes et calcule le hash.
+            // Convertit la chaîne en un tableau de bytes et calcule le hash.
             byte[] data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
 
-            // Crée un StringBuilder pour recueillir les bytes et créer une chaîne.
+            // Utilise un StringBuilder pour collecter les bytes et former une chaîne.
             var sBuilder = new StringBuilder();
 
             // Parcourt chaque byte des données hashées et les formate en chaîne hexadécimale.
