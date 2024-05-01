@@ -12,14 +12,14 @@ namespace MediaTekDocuments.controller
     class FrmLoginController
     {
         /// <summary>
-        /// Objet pour l'accès aux données
+        /// Objet pour l'accès aux données.
         /// </summary>
         private readonly Access access;
 
         private Utilisateur utilisateur = null;
 
         /// <summary>
-        /// Obtient l'instance unique d'accès aux données.
+        /// Initialisation et récupération de l'instance unique pour l'accès aux données.
         /// </summary>
         public FrmLoginController()
         {
@@ -27,7 +27,7 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
-        /// Active la vue principale.
+        /// Initialise et affiche la fenêtre principale.
         /// </summary>
         private void Init()
         {
@@ -36,11 +36,11 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
-        /// Vérifie l'existence de l'utilisateur dans la base de données.
+        /// Authentifie l'utilisateur en utilisant son email et mot de passe.
         /// </summary>
-        /// <param name="mail">Adresse mail de l'utilisateur.</param>
+        /// <param name="mail">Email de l'utilisateur.</param>
         /// <param name="password">Mot de passe de l'utilisateur.</param>
-        /// <returns>Vrai si l'utilisateur existe et est authentifié.</returns>
+        /// <returns>Vrai si l'authentification est réussie.</returns>
         public bool GetLogin(string mail, string password)
         {
             password = "Mediatek" + password;
@@ -60,20 +60,20 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
-        /// Convertit un mot de passe en une chaîne de hash.
+        /// Génère le hash SHA256 d'une chaîne de caractères.
         /// </summary>
         /// <param name="hashAlgorithm">Algorithme de hash utilisé.</param>
-        /// <param name="input">Mot de passe à hasher.</param>
-        /// <returns>Chaîne de caractères représentant le hash.</returns>
+        /// <param name="input">Texte à hasher.</param>
+        /// <returns>Hash SHA256 sous forme de chaîne hexadécimale.</returns>
         private static string GetHash(HashAlgorithm hashAlgorithm, string input)
         {
-            // Convertit la chaîne en un tableau de bytes et calcule le hash.
+            // Convertit le texte en tableau de bytes et calcule le hash.
             byte[] data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
 
-            // Utilise un StringBuilder pour collecter les bytes et former une chaîne.
+            // Utilise un StringBuilder pour assembler les bytes du hash en texte.
             var sBuilder = new StringBuilder();
 
-            // Parcourt chaque byte des données hashées et les formate en chaîne hexadécimale.
+            // Parcourt chaque byte du hash et le convertit en chaîne hexadécimale.
             for (int i = 0; i < data.Length; i++)
             {
                 sBuilder.Append(data[i].ToString("x2"));
