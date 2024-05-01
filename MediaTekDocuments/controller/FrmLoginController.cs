@@ -12,7 +12,7 @@ namespace MediaTekDocuments.controller
     class FrmLoginController
     {
         /// <summary>
-        /// Objet pour l'accès aux données.
+        /// Objet pour l'accès aux données
         /// </summary>
         private readonly Access access;
 
